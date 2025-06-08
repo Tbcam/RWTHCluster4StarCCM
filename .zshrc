@@ -6,7 +6,7 @@
 #source /usr/local_host/etc/switch_login_shell bash
 
 alias sl="squeue -t all -u ab123 -o \"%9i %.40j %.9T %.20S %.20e %.6M %.9l %.16p %.4C %.4D %30Y %a %.R\""
-alias w1sl='watch -n1 "squeue -t all -u pa110240 -o \"%9i %.40j %.9T %.20S %.20e %.6M %.9l %.16p %.4C %.4D %30Y %a %.R\""'
+alias w1sl='watch -n1 "squeue -t all -u ab123 -o \"%9i %.40j %.9T %.20S %.20e %.6M %.9l %.16p %.4C %.4D %30Y %a %.R\""'
 alias go2dir="cd /rwthfs/rz/cluster/hpcwork/ab123"
 alias create1dir="java -jar createSimDir.jar"
 alias runsim="sh -e SLURMshell_Jobchain.txt"
