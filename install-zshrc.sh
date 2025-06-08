@@ -1,6 +1,6 @@
 #!/bin/bash
 
-USER_ID=$(whoami)
+ab123=$(whoami)
 ZSHRC_PATH="/home/$USER_ID/.zshrc"
 
 curl -s https://raw.githubusercontent.com/Tbcam/RWTHCluster4StarCCM/main/.zshrc -o "$ZSHRC_PATH"
