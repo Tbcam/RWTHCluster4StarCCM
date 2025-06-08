@@ -17,12 +17,12 @@ alias billingextra="sacct -o JobName%15,Elapsed,JobID,AllocTres%70 -S $(date -d 
 alias followup='file="$(ls -t *.txt | head -n 1)" && cat "$file" && tail -f "$file"'
 
 fireandforget() {
-    cd /rwthfs/rz/cluster/hpcwork/ab123 || { echo "Failed to enter GPUST"; return 1; }
+    cd /rwthfs/rz/cluster/hpcwork/ab123/"${1:-}" || { echo "Failed to enter GPUST"; return 1; }
     SECONDS=0
     sim_files=($(find . -maxdepth 1 -type f -name "*.sim"))
 
     if [ ${#sim_files[@]} -eq 0 ]; then
-        echo "No .sim files found in GPUST."
+        echo "No .sim files found."
         return 1
     fi
 
