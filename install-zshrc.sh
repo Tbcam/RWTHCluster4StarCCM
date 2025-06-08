@@ -10,3 +10,7 @@ curl -s https://raw.githubusercontent.com/Tbcam/RWTHCluster4StarCCM/main/.zshrc 
 sed -i "s/ab123/$ab123/g" "$ZSHRC_PATH"
 
 echo ".zshrc updated for user: $ab123"
+
+
+# Apply the changes immediately
+source "$ZSHRC_PATH"
