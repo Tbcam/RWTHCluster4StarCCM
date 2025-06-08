@@ -15,6 +15,49 @@ alias usage="r_wlm_usage -p p0020102"
 alias billing="sacct -o JobName%15,Elapsed,JobID,AllocTres%70 --allocations -S $(date -d "-360 days" +%Y-%m-%d)"
 alias billingextra="sacct -o JobName%15,Elapsed,JobID,AllocTres%70 -S $(date -d "-360 days" +%Y-%m-%d)"
 alias followup='file="$(ls -t *.txt | head -n 1)" && cat "$file" && tail -f "$file"'
+
+fireandforget() {
+    cd /rwthfs/rz/cluster/hpcwork/ab123 || { echo "Failed to enter GPUST"; return 1; }
+    SECONDS=0
+    sim_files=($(find . -maxdepth 1 -type f -name "*.sim"))
+
+    if [ ${#sim_files[@]} -eq 0 ]; then
+        echo "No .sim files found in GPUST."
+        return 1
+    fi
+
+    for sim_file in "${sim_files[@]}"; do
+        sim_name=$(basename "$sim_file")  # Ensure only filename is used
+        echo "Creating simulation directory for: $sim_name"
+        
+        java -jar createSimDir.jar "$sim_name"
+
+        folder_name="${sim_name%.sim}"  # Expected directory name
+
+        echo "Waiting for directory '$folder_name' to appear..."
+        for i in {1..20}; do
+            if [ -d "$folder_name" ]; then
+                duration=$SECONDS
+                echo "Directory created: $folder_name"
+                echo "It took ${duration} seconds to create the directory."
+                cd "$folder_name"
+                sh -e SLURMshell_Jobchain.txt
+                cd ..
+                break
+            fi
+            echo "Waiting..."
+            sleep 0.5
+        done
+
+        if [ ! -d "$folder_name" ]; then
+            echo "Directory '$folder_name' not found after waiting."
+        fi
+    done
+
+    echo "All simulation directories processed."
+}
+
+
 simdir() {
   if [ -z "$1" ]; then
     echo "Error>> Usage: simdir <folder_name>."
@@ -47,5 +90,7 @@ simdirgo() {
   echo "Directory '$1' not found after waiting."
   return 1
 }
+
+
 
 
