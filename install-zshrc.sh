@@ -2,7 +2,8 @@
 
 ab123=$(whoami)
 ZSHRC_PATH="/home/$ab123/.zshrc"
-echo "                    &&:                                                  
+echo "                    
+                          &&:                                                  
                         &&  &&                                                  
                      &&    &                                                    
                   .&;    &                                                      
