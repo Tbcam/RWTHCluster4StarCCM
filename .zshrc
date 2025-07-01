@@ -6,8 +6,11 @@
 #source /usr/local_host/etc/switch_login_shell bash
 
 alias sl="squeue -t all -u ab123 -o \"%9i %.40j %.9T %.20S %.20e %.6M %.9l %.16p %.4C %.4D %30Y %a %.R\""
+alias sacct="sacct  --format=JobID%-12,JobName%30,State,Start,End,Elapsed,priority,NCPUS,NODELIST%32,AveCPUFreq"
 alias w1sl='watch -n1 "squeue -t all -u ab123 -o \"%9i %.40j %.9T %.20S %.20e %.6M %.9l %.16p %.4C %.4D %30Y %a %.R\""'
 alias go2dir="cd /rwthfs/rz/cluster/hpcwork/ab123"
+alias go2cpu="cd /rwthfs/rz/cluster/hpcwork/ab123/CPUST"
+alias go2gpu="cd /rwthfs/rz/cluster/hpcwork/ab123/GPUST"
 alias create1dir="java -jar createSimDir.jar"
 alias runsim="sh -e SLURMshell_Jobchain.txt"
 alias run1sim="sbatch SLURMbatchSim.txt"
