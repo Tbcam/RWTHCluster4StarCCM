@@ -15,7 +15,8 @@ echo "
      &__&$ &    x+  & &  & .&__&  __&& &  ;&&        &                    &&     
     ;;     &  ; &  & &   & &     &  & :&  & &         &                 $&       
      &&&:  &&&: &&&& &  XX +&&&  &&:& &.&&  &&          .+$&&&&&&&&&&&&&&        
-    Starting Alias adder MADE by TABO further info:
+    Starting Alias adder                                     MADE by TABO 
+    further info:
    ecurieaix.qwikinow.de/content/3dbc5542-f955-4cda-a9ff-ec3618338842?title=qol-improvements-for-rwth-cluster-users"
 
 # Download .zshrc template
@@ -27,5 +28,6 @@ sed -i "s/ab123/$ab123/g" "$ZSHRC_PATH"
 # Apply the changes immediately
 source "$ZSHRC_PATH"
 
-echo "Success .zshrc updated at this path $ZSHRC_PATH and applied for user: $ab123"
+echo "Success!!!! 
+.zshrc updated at this path $ZSHRC_PATH and applied for user: $ab123"
 echo "You can try to use aliases now. if that doesnt work close putty and open again."
