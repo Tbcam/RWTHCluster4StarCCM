@@ -5,7 +5,6 @@
 
 #source /usr/local_host/etc/switch_login_shell bash
 alias helpalias="
-
 fireandforget: Runs all the *.sim files inside your hpcwork/<yourTIMcode> folder. Especially useful to do multiple simulations at once.
 go2dir: Goes to your working directory
 simdir <Simulation name>: Creates simulation directory
