@@ -30,4 +30,4 @@ source "$ZSHRC_PATH"
 
 echo "Success!!!! 
 .zshrc updated at this path $ZSHRC_PATH and applied for user: $ab123"
-echo "You can try to use aliases now for example you can write helpalias, if that doesnt work close putty and open again."
+echo "You can try to use aliases.If that doesnt work close putty and open again."
