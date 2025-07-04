@@ -23,7 +23,7 @@ further info:
    ecurieaix.qwikinow.de/content/3dbc5542-f955-4cda-a9ff-ec3618338842?title=qol-improvements-for-rwth-cluster-users
 Current contact:TABO (last updated 04/07/2025)
 "
-alias aliasupdate="bash <(curl -s https://raw.githubusercontent.com/Tbcam/RWTHCluster4StarCCM/main/install-zshrc.sh)"
+alias updatealias="bash <(curl -s https://raw.githubusercontent.com/Tbcam/RWTHCluster4StarCCM/main/install-zshrc.sh)"
 alias sl="squeue -t all -u ab123 -o \"%9i %.40j %.9T %.20S %.20e %.6M %.9l %.16p %.4C %.4D %30Y %a %.R\""
 alias sacct="sacct  --format=JobID%-12,JobName%30,State,Start,End,Elapsed,priority,NCPUS,NODELIST%32,AveCPUFreq"
 alias w1sl='watch -n1 "squeue -t all -u ab123 -o \"%9i %.40j %.9T %.20S %.20e %.6M %.9l %.16p %.4C %.4D %30Y %a %.R\""'
