@@ -5,19 +5,19 @@
 
 #source /usr/local_host/etc/switch_login_shell bash
 alias helpalias="echo"
-fireandforget: Runs all the *.sim files inside your hpcwork/<yourTIMcode> folder. Especially useful to do multiple simulations at once.
-go2dir: Goes to your working directory
-simdir <Simulation name>: Creates simulation directory
-simdirgo <Simulation name>: Creates simulation directory then goes inside that folder.(so you can directly use "runsim")
-runsim: Starts the full simulation jobchain
-sl: Shows pending and running simulations
-followup: Shows live update of the last created report file. So you can check you sim process from terminal
-w1sl: Shows pending and running simulations live
-run1sim: Starts just the simulation batch (you can change `SLURMbatchSim.txt` file to something else)
-usage: Shows CPUh usage for all of the project
-billing: Shows CPUh usage(billing) for each job you have done last 30 days (you can change this number)
-updatealias: Runs update for aliases. Usefull for getting any new aliases or fixes.
-helpalias: Basicly shows what is written in here.
+#fireandforget: Runs all the *.sim files inside your hpcwork/<yourTIMcode> folder. Especially useful to do multiple simulations at once.
+#go2dir: Goes to your working directory
+#simdir <Simulation name>: Creates simulation directory
+#simdirgo <Simulation name>: Creates simulation directory then goes inside that folder.(so you can directly use "runsim")
+#runsim: Starts the full simulation jobchain
+#sl: Shows pending and running simulations
+#followup: Shows live update of the last created report file. So you can check you sim process from terminal
+#w1sl: Shows pending and running simulations live
+#run1sim: Starts just the simulation batch (you can change `SLURMbatchSim.txt` file to something else)
+#usage: Shows CPUh usage for all of the project
+#billing: Shows CPUh usage(billing) for each job you have done last 30 days (you can change this number)
+#updatealias: Runs update for aliases. Usefull for getting any new aliases or fixes.
+#helpalias: Basicly shows what is written in here.
 
 further info:
    ecurieaix.qwikinow.de/content/3dbc5542-f955-4cda-a9ff-ec3618338842?title=qol-improvements-for-rwth-cluster-users
