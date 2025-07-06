@@ -102,7 +102,7 @@ simdirgo() {
       duration=$SECONDS
       echo "Directory created: $1"
       echo "It took ${duration} seconds to create the directory."
-      cd "$1"
+      cd "${1%%.*}"
       return 0
     fi
     echo "Waiting..."
