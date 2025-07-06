@@ -12,9 +12,9 @@ echo "
                                                             .&&&&&&&X              
                           &              &       :&&&:                 x&&&&         
     &&&&  &&&& &   & &&& &$  &&x&  &&&& &$  &  &:     &                    &&&&     
-   &__&$ &    x+  & &    & .&__&  __&&  &   ;&&        &                   &&     
+   &__&$ &    &   & &    & .&__&  __&&  &   ;&&        &                   &&     
   ;;    &    &   & &    &  &     &  &  :&   & &        &                $&       
-  &&&:  &&&::&&&& &    && +&&&   &&:& && &&  &&       .+$&&&&&&&&&&&&&&        
+  &&&: :&&&::&&&& &    && +&&&   &&:& &&  &&  &&       .+$&&&&&&&&&&&&&&        
     Starting Alias adder                                     MADE by TABO (last updated 04/07/2025) 
     further info:
    ecurieaix.qwikinow.de/content/3dbc5542-f955-4cda-a9ff-ec3618338842?title=qol-improvements-for-rwth-cluster-users"
