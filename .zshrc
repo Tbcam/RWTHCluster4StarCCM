@@ -118,14 +118,14 @@ simdirgo() {
 # - if file contains 'starccm+' AND the exact line '### load modules'
 #     -> insert (if missing after the marker):
 #        1) "### to get selected version..." (only if missing)
-#        2) " module load STAR-CCM+/19.04.009" (unless already present)
+#        2) "module load STAR-CCM+/19.04.009" (unless already present)
 # - if '### load modules' is missing -> log and skip (do not touch file)
 # - if module line already exists -> log and skip (do not touch file)
 # - write a short report to RepTABOsAwsomeLoader.txt (ASCII only)
 starccmdownloader() {
   local report="RepTABOsAwsomeLoader.txt"
   local version_line="### to get selected version of starccm current is Simcenter STAR-CCM+ 2406.0001 Build 19.04.009 (linux-x86_64-2.28/gnu11.4)"
-  local module_line=" module load STAR-CCM+/19.04.009"
+  local module_line="module load STAR-CCM+/19.04.009"
   local marker_re='^### load modules$'
   local now; now="$(date '+%Y-%m-%d %H:%M:%S')"
 
@@ -143,7 +143,7 @@ starccmdownloader() {
 
   local anytxt=0 edited=0 skipped_nomarker=0 skipped_nomatch=0 skipped_has_module=0
 
-  shopt -s nullglob
+  setopt LOCAL_OPTIONS NULL_GLOB
   for f in *.txt; do
     anytxt=1
 
@@ -195,7 +195,6 @@ starccmdownloader() {
     echo "          - $module_line" >> "$report"
     ((edited++))
   done
-  shopt -u nullglob
 
   {
     echo "-----"
