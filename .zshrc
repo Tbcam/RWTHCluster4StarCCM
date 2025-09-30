@@ -116,13 +116,13 @@ simdirgo() {
 # starccmdownloader: scan *.txt in current dir, and:
 # - if file contains 'starccm+' AND the exact line '### load modules'
 #     -> insert (if missing after the marker):
-#        1) "### to get selected version..." (only if not already there)
-#        2) "### module load STAR-CCM+/19.04.009" (always needed unless already present)
+#        1) "### to get selected version..." (only if missing)
+#        2) "### module load STAR-CCM+/19.04.009" (unless already present)
 # - if '### load modules' is missing -> log and skip (do not touch file)
 # - if module line already exists -> log and skip (do not touch file)
-# - write a short report to RepTABOsAwsomeLoader.txt
+# - write a short report to RepTABOsAwsomeLoader.txt (ASCII only)
 starccmdownloader() {
-  local report="RepTABOsAwsomeLoader.txt"   # no space
+  local report="RepTABOsAwsomeLoader.txt"
   local version_line="### to get selected version of starccm current is Simcenter STAR-CCM+ 2406.0001 Build 19.04.009 (linux-x86_64-2.28/gnu11.4)"
   local module_line="### module load STAR-CCM+/19.04.009"
   local marker_re='^### load modules$'
@@ -130,14 +130,14 @@ starccmdownloader() {
 
   : > "$report"
   {
-    echo "RepTABOsAwsomeLoader — run @ $now"
+    echo "RepTABOsAwsomeLoader - run @ $now"
     echo "Folder: $(pwd)"
     echo "Rule: touch only files that contain 'starccm+' AND the marker '### load modules'."
     echo "If marker missing: log and skip (as requested: \"if ### load modules doesnt not exist log\")."
     echo "Add directly under the first marker:"
     echo "  - $version_line (only if missing)"
     echo "  - $module_line (unless it already exists)"
-    echo "——"
+    echo "-----"
   } >> "$report"
 
   local anytxt=0 edited=0 skipped_nomarker=0 skipped_nomatch=0 skipped_has_module=0
@@ -148,21 +148,21 @@ starccmdownloader() {
 
     # Must contain 'starccm+'
     if ! grep -qi 'starccm\+' "$f"; then
-      echo "[SKIP] $f — no 'starccm+' found." >> "$report"
+      echo "[SKIP] $f - no 'starccm+' found." >> "$report"
       ((skipped_nomatch++))
       continue
     fi
 
     # Must contain the exact marker line
     if ! grep -qE "$marker_re" "$f"; then
-      echo "[SKIP] $f — '### load modules' not found; logged per spec; file untouched." >> "$report"
+      echo "[SKIP] $f - '### load modules' not found; logged per spec; file untouched." >> "$report"
       ((skipped_nomarker++))
       continue
     fi
 
     # If module line already present, do not touch
     if grep -Fq "$module_line" "$f"; then
-      echo "[OK]   $f — module line already present; file untouched." >> "$report"
+      echo "[OK]   $f - module line already present; file untouched." >> "$report"
       ((skipped_has_module++))
       continue
     fi
@@ -187,7 +187,7 @@ starccmdownloader() {
         }
       }' "$f" > "$tmp" && mv "$tmp" "$f"
 
-    echo "[SUCCESS] $f — inserted:" >> "$report"
+    echo "[SUCCESS] $f - inserted:" >> "$report"
     if (( need_version == 1 )); then
       echo "          - $version_line" >> "$report"
     fi
@@ -197,7 +197,7 @@ starccmdownloader() {
   shopt -u nullglob
 
   {
-    echo "——"
+    echo "-----"
     if (( anytxt == 0 )); then
       echo "[INFO] No .txt files in this folder."
     else
