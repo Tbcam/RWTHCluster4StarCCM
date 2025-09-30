@@ -118,14 +118,16 @@ simdirgo() {
 # - if file contains 'starccm+' AND the exact line '### load modules'
 #     -> insert (if missing after the marker):
 #        1) "### to get selected version..." (only if missing)
-#        2) "### module load STAR-CCM+/19.04.009" (unless already present)
+#        2) "module load STAR-CCM+/19.04.009" (unless already present)
 # - if '### load modules' is missing -> log and skip (do not touch file)
 # - if module line already exists -> log and skip (do not touch file)
 # - write a short report to RepTABOsAwsomeLoader.txt (ASCII only)
+
 starccmdownloader() {
   local report="RepTABOsAwsomeLoader.txt"
   local version_line="### to get selected version of starccm current is Simcenter STAR-CCM+ 2406.0001 Build 19.04.009 (linux-x86_64-2.28/gnu11.4)"
-  local module_line="### module load STAR-CCM+/19.04.009"
+  local module_line_plain="module load STAR-CCM+/19.04.009"
+  local module_line_commented="### module load STAR-CCM+/19.04.009"
   local marker_re='^### load modules$'
   local now; now="$(date '+%Y-%m-%d %H:%M:%S')"
 
@@ -137,72 +139,76 @@ starccmdownloader() {
     echo "If marker missing: log and skip (as requested: \"if ### load modules doesnt not exist log\")."
     echo "Add directly under the first marker:"
     echo "  - $version_line (only if missing)"
-    echo "  - $module_line (unless it already exists)"
+    echo "  - $module_line_plain (unless it already exists)"
+    echo "Note: if only commented module line exists, add plain line and note it."
     echo "-----"
   } >> "$report"
 
   local anytxt=0 edited=0 skipped_nomarker=0 skipped_nomatch=0 skipped_has_module=0
 
-  shopt -s nullglob
-  for f in *.txt; do
+  # Iterate .txt files robustly (spaces-safe) without shopt/globbing
+  while IFS= read -r -d '' f; do
     anytxt=1
 
     # Must contain 'starccm+'
     if ! grep -qi 'starccm\+' "$f"; then
-      echo "[SKIP] $f - no 'starccm+' found." >> "$report"
+      echo "[SKIP] ${f#./} - no 'starccm+' found." >> "$report"
       ((skipped_nomatch++))
       continue
     fi
 
     # Must contain the exact marker line
     if ! grep -qE "$marker_re" "$f"; then
-      echo "[SKIP] $f - '### load modules' not found; logged per spec; file untouched." >> "$report"
+      echo "[SKIP] ${f#./} - '### load modules' not found; logged per spec; file untouched." >> "$report"
       ((skipped_nomarker++))
       continue
     fi
 
-    # If module line already present, do not touch
-    if grep -Fq "$module_line" "$f"; then
-      echo "[OK]   $f - module line already present; file untouched." >> "$report"
+    # If plain module line already present, do not touch
+    if grep -Fq "$module_line_plain" "$f"; then
+      echo "[OK]   ${f#./} - plain module line already present; file untouched." >> "$report"
       ((skipped_has_module++))
       continue
     fi
 
-    # Decide whether version line is needed
-    local need_version=1
+    # Decide whether version line is needed / commented existed
+    local need_version=1 had_commented=0
     grep -Fq "$version_line" "$f" && need_version=0
+    grep -Fq "$module_line_commented" "$f" && had_commented=1
 
     # Insert immediately AFTER the first '### load modules' line
     local tmp; tmp="$(mktemp)"
     awk -v marker_re="$marker_re" \
         -v need_version="$need_version" \
         -v version_line="$version_line" \
-        -v module_line="$module_line" '
+        -v module_line_plain="$module_line_plain" '
       BEGIN{added=0}
       {
         print
         if (!added && $0 ~ marker_re) {
           if (need_version == 1) print version_line
-          print module_line
+          print module_line_plain
           added=1
         }
       }' "$f" > "$tmp" && mv "$tmp" "$f"
 
-    echo "[SUCCESS] $f - inserted:" >> "$report"
+    echo "[SUCCESS] ${f#./} - inserted:" >> "$report"
     if (( need_version == 1 )); then
       echo "          - $version_line" >> "$report"
     fi
-    echo "          - $module_line" >> "$report"
+    echo "          - $module_line_plain" >> "$report"
+    if (( had_commented == 1 )); then
+      echo "          note: commented module line existed; kept as-is and added plain line." >> "$report"
+    fi
     ((edited++))
-  done
-  shopt -u nullglob
+  done < <(find . -maxdepth 1 -type f -name '*.txt' -print0)
 
   {
     echo "-----"
     if (( anytxt == 0 )); then
       echo "[INFO] No .txt files in this folder."
     else
-      echo "[SUMMARY] edited=$edited, skipped_no_marker=$skipped_nomarker, skipped_no_starccm=$skipped_nomatch, skipped_has_module=$skipped_has_module"
+      echo "[SUMMARY] edited=$edited, skipped_no_marker=$skipped_nomarker, skipped_no_starccm=$skipped_nomatch, skipped_has_plain_module=$skipped_has_module"
     fi
     echo "Done."
   } >> "$report"
