@@ -18,6 +18,7 @@ alias helpalias='echo -e "
 #billing: Shows CPUh usage(billing) for each job you have done last 30 days (you can change this number)
 #updatealias: Runs update for aliases. Usefull for getting any new aliases or fixes.
 #helpalias: Basicly shows what is written in here.
+#starccmdownloader:Adds a module load line for existing template so selected version of starccm+ can be used. Current version Simcenter STAR-CCM+ 2406.0001 Build 19.04.009 (linux-x86_64-2.28/gnu11.4)
 
 further info:
    ecurieaix.qwikinow.de/content/3dbc5542-f955-4cda-a9ff-ec3618338842?title=qol-improvements-for-rwth-cluster-users
