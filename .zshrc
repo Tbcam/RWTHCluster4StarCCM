@@ -14,6 +14,7 @@ alias helpalias='echo -e "
 #followup: Shows live update of the last created report file. So you can check you sim process from terminal
 #w1sl: Shows pending and running simulations live
 #run1sim: Starts just the simulation batch (you can change SLURMbatchSim.txt file to something else)
+#run1eval: Starts just the evaluation/pospro
 #usage: Shows CPUh usage for all of the project
 #billing: Shows CPUh usage(billing) for each job you have done last 30 days (you can change this number)
 #updatealias: Runs update for aliases. Usefull for getting any new aliases or fixes.
