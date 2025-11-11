@@ -35,7 +35,16 @@ alias create1dir="java -jar createSimDir.jar"
 alias runsim="sh -e SLURMshell_Jobchain.txt"
 alias run1sim="sbatch SLURMbatchSim.txt"
 alias run1eval="sbatch SLURMbatchEval.txt"
-alias usage="r_wlm_usage -p p0020102"
+usage() {
+  local months="$1"
+  local cmd=(r_wlm_usage -p p0020102)
+
+  if [[ -n "$months" ]]; then
+    cmd+=(-m "$months")
+  fi
+
+  "${cmd[@]}"
+}
 alias billing="sacct -o JobName%15,Elapsed,JobID,AllocTres%70 --allocations -S $(date -d "-360 days" +%Y-%m-%d)"
 alias billingextra="sacct -o JobName%15,Elapsed,JobID,AllocTres%70 -S $(date -d "-360 days" +%Y-%m-%d)"
 alias followup='file="$(ls -t *.txt | head -n 1)" && cat "$file" && tail -f "$file"'
