@@ -5,6 +5,7 @@
 
 #source /usr/local_host/etc/switch_login_shell bash
 alias helpalias='echo -e "
+current version: 251111
 #fireandforget: Runs all the *.sim files inside your hpcwork/<yourTIMcode> folder. Especially useful to do multiple simulations at once.
 #go2dir: Goes to your working directory
 #simdir <Simulation name>: Creates simulation directory
@@ -15,7 +16,7 @@ alias helpalias='echo -e "
 #w1sl: Shows pending and running simulations live
 #run1sim: Starts just the simulation batch (you can change SLURMbatchSim.txt file to something else)
 #run1eval: Starts just the evaluation/pospro
-#usage: Shows CPUh usage for all of the project
+#usage: Shows CPUh usage for all of the project for more results use with numbers. Example: usage 12 shows last 12 months. 
 #billing: Shows CPUh usage(billing) for each job you have done last 30 days (you can change this number)
 #updatealias: Runs update for aliases. Usefull for getting any new aliases or fixes.
 #helpalias: Basicly shows what is written in here.
