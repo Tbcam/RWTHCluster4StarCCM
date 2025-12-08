@@ -15,7 +15,7 @@ echo "
    &__&$ &    &   & &    & .&__&  __&&  &   ;&&        &                   &&     
   ;;    &    &   & &    &  &     &  &  :&   & &        &                $&       
   &&&: :&&&::&&&& &    && +&&&   &&:& &&  &&  &&       .+$&&&&&&&&&&&&&&        
-    Starting Alias adder                                     MADE by TABO (last updated 11/11/2025) 
+    Starting Alias adder                                     MADE by TABO (last updated 08/12/2025) 
     further info:
    ecurieaix.qwikinow.de/content/3dbc5542-f955-4cda-a9ff-ec3618338842?title=qol-improvements-for-rwth-cluster-users"
 
