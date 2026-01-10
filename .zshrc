@@ -37,7 +37,9 @@ alias create1dir="java -jar createSimDir.jar"
 alias runsim="sh -e SLURMshell_Jobchain.txt"
 alias run1sim="sbatch SLURMbatchSim.txt"
 alias run1eval="sbatch SLURMbatchEval.txt"
-alias clusterinfo=“sinfo -O Partition,NodeAIOT,CPUsState:30”
+alias clusterinfo="sinfo -O Partition,NodeAIOT,CPUsState:30"
+alias gpuqueue="squeue -p c23mm -o '%.18i %.9P %.80j %.8u %.2t %.10M %.10l %.6D %.10b %R'"
+
 usage() {
   local months="$1"
   local cmd=(r_wlm_usage -p p0020102)
