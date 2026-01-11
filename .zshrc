@@ -5,8 +5,19 @@
 
 #source /usr/local_host/etc/switch_login_shell bash
 alias helpalias='echo -e "
-current version: 251208
+current version: 260111
 #fireandforget: Runs all the *.sim files inside your hpcwork/<yourTIMcode> folder. Especially useful to do multiple simulations at once.
+    #Usage: fireandforget [folder] [preset]
+    #Examples:
+      #fireandforget                    - Current directory, uses default preset
+      #fireandforget minimal            - Current directory, minimal preset
+      #fireandforget CPUST              - CPUST folder, uses default preset
+      #fireandforget CPUST standard     - CPUST folder, standard preset
+      #fireandforget CPUST wing_custom  - CPUST folder, custom preset
+    #Presets: minimal, standard, advanced, mesh, full, or any custom preset name
+#setdefaultpreset: Sets your personal default preset for fireandforget (run without args to see current default)
+    #Usage: setdefaultpreset <preset_name>
+    #Example: setdefaultpreset standard
 #go2dir: Goes to your working directory
 #simdir <Simulation name>: Creates simulation directory
 #simdirgo <Simulation name>: Creates simulation directory then goes inside that folder.(so you can directly use \"runsim\")
@@ -54,8 +65,58 @@ alias billing="sacct -o JobName%15,Elapsed,JobID,AllocTres%70 --allocations -S $
 alias billingextra="sacct -o JobName%15,Elapsed,JobID,AllocTres%70 -S $(date -d "-360 days" +%Y-%m-%d)"
 alias followup='file="$(ls -t *.txt | head -n 1)" && cat "$file" && tail -f "$file"'
 
+setdefaultpreset() {
+    local preset_file="$HOME/.fireandforget_default_preset"
+    
+    if [ -z "$1" ]; then
+        # Show current default
+        if [ -f "$preset_file" ]; then
+            local current_preset=$(cat "$preset_file")
+            echo "Current default preset: $current_preset"
+        else
+            echo "Current default preset: full (system default)"
+        fi
+        echo ""
+        echo "Usage: setdefaultpreset <preset_name>"
+        echo "Available presets: minimal, standard, advanced, mesh, full, or any custom name"
+        echo "Example: setdefaultpreset standard"
+        return 0
+    fi
+    
+    echo "$1" > "$preset_file"
+    echo "Default preset set to: $1"
+    echo "This will be used when running 'fireandforget' without specifying a preset"
+}
+
 fireandforget() {
-    cd /rwthfs/rz/cluster/hpcwork/ab123/"${1:-}" || { echo "Failed to enter GPUST"; return 1; }
+    local preset_file="$HOME/.fireandforget_default_preset"
+    local preset="full"
+    
+    # Load user's default preset if set
+    if [ -f "$preset_file" ]; then
+        preset=$(cat "$preset_file")
+    fi
+    
+    local target_dir=""
+    
+    # Determine directory and preset based on arguments
+    if [ -z "$1" ]; then
+        # No arguments: stay in current directory, use full preset
+        target_dir="."
+    elif [ -d "/rwthfs/rz/cluster/hpcwork/ab123/$1" ]; then
+        # First arg is a directory: cd into it
+        target_dir="/rwthfs/rz/cluster/hpcwork/ab123/$1"
+        preset="${2:-full}"
+    else
+        # First arg is not a directory: treat as preset name, stay in current dir
+        target_dir="."
+        preset="$1"
+    fi
+    
+    cd "$target_dir" || { echo "Failed to enter directory: $target_dir"; return 1; }
+    echo "Working directory: $(pwd)"
+    echo "Using preset: $preset"
+    
     SECONDS=0
     sim_files=($(find . -maxdepth 1 -type f -name "*.sim"))
 
@@ -79,6 +140,17 @@ fireandforget() {
                 echo "Directory created: $folder_name"
                 echo "It took ${duration} seconds to create the directory."
                 cd "$folder_name"
+                
+                # Copy preset configuration file from centralized location
+                local preset_path="/rwthfs/rz/cluster/hpcwork/ab123/postpropresets/simPostproConfig_${preset}.txt"
+                if [ -f "$preset_path" ]; then
+                    cp "$preset_path" simPostproConfig.txt
+                    echo "Applied '${preset}' preset configuration"
+                else
+                    echo "Warning: Preset '${preset}' not found in /rwthfs/rz/cluster/hpcwork/ab123/postpropresets/"
+                    echo "Post-processing will run with full export (default behavior)"
+                fi
+                
                 sh -e SLURMshell_Jobchain.txt
                 cd ..
                 break
