@@ -142,12 +142,12 @@ fireandforget() {
                 cd "$folder_name"
                 
                 # Copy preset configuration file from centralized location
-                local preset_path="/rwthfs/rz/cluster/hpcwork/ab123/postpropresets/simPostproConfig_${preset}.txt"
+                local preset_path="../postpropresets/simPostproConfig_${preset}.txt"
                 if [ -f "$preset_path" ]; then
                     cp "$preset_path" simPostproConfig.txt
                     echo "Applied '${preset}' preset configuration"
                 else
-                    echo "Warning: Preset '${preset}' not found in /rwthfs/rz/cluster/hpcwork/ab123/postpropresets/"
+                    echo "Warning: Preset '${preset}' not found in postpropresets folder"
                     echo "Post-processing will run with full export (default behavior)"
                 fi
                 
