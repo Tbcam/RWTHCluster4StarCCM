@@ -88,6 +88,127 @@ setdefaultpreset() {
     echo "This will be used when running 'fireandforget' without specifying a preset"
 }
 
+newfireandforget() {
+  local base="/rwthfs/rz/cluster/hpcwork/p0020102/$USER"
+
+  local print_help
+  print_help() {
+    echo -e "Usage: newfireandforget <single|standard|sensitivity> [adjoint]\n\n"\
+"Beispiele:\n"\
+"  newfireandforget single\n"\
+"  newfireandforget standard adjoint\n\n"\
+"Funktion:\n"\
+"  - geht nach: $base\n"\
+"  - fuer jede *.sim:\n"\
+"      1) java -jar createsSimDir.jar SIMNAME.sim\n"\
+"      2) cd SIMNAME/\n"\
+"      3) sbatch ../<mode>.txt\n"\
+"      4) optional: sbatch --dependency=afterok:<jobid> ../adjoint.txt\n\n"\
+"Voraussetzung:\n"\
+"  - createsSimDir.jar sowie single.txt/standard.txt/sensitivity.txt (und optional adjoint.txt) liegen in $base\n"\
+"  - SIMFILE wird per --export gesetzt (in den Skripten als \$SIMFILE nutzbar)"
+  }
+
+  local mode="${1:-}"
+  shift 2>/dev/null || true
+
+  # Wenn kein Modus angegeben: Help
+  if [[ -z "$mode" ]]; then
+    print_help
+    return 0
+  fi
+
+  # optionales 'adjoint' erkennen (egal an welcher Stelle)
+  local do_adjoint=0
+  for a in "$@"; do
+    if [[ "$a" == "adjoint" ]]; then
+      do_adjoint=1
+      break
+    fi
+  done
+
+  # Modus -> Script (wenn unbekannt: Help)
+  local script=""
+  case "$mode" in
+    single)      script="single.txt" ;;
+    standard)    script="standard.txt" ;;
+    sensitivity) script="sensitivity.txt" ;;
+    *)
+      print_help
+      return 1
+      ;;
+  esac
+
+  # ins Projektverzeichnis wechseln
+  cd "$base" || { echo "Error: Cannot cd to $base"; return 1; }
+
+  # sim files sammeln
+  setopt LOCAL_OPTIONS NULL_GLOB
+  local sims=( *.sim )
+
+  if (( ${#sims[@]} == 0 )); then
+    echo "No .sim files found in: $base"
+    return 1
+  fi
+
+  # Existenz prüfen
+  if [[ ! -f "createsSimDir.jar" ]]; then
+    echo "Error: Missing createsSimDir.jar in $base"
+    return 1
+  fi
+  if [[ ! -f "$script" ]]; then
+    echo "Error: Missing $script in $base"
+    return 1
+  fi
+  if (( do_adjoint )) && [[ ! -f "adjoint.txt" ]]; then
+    echo "Error: Missing adjoint.txt in $base (but 'adjoint' was requested)"
+    return 1
+  fi
+
+  # submit
+  local sim simdir jid out
+  for sim in "${sims[@]}"; do
+    simdir="${sim%.sim}"
+
+    echo "Preparing directory for: $sim"
+    # Ordner erzeugen
+    java -jar createsSimDir.jar "$sim" || {
+      echo "Error: createsSimDir.jar failed for $sim"
+      continue
+    }
+
+    if [[ ! -d "$simdir" ]]; then
+      echo "Error: Expected directory '$simdir' was not created for $sim"
+      continue
+    fi
+
+    echo "Submitting '$mode' inside: $simdir/"
+    # In den Sim-Ordner wechseln und dort submitten (Skripte liegen eine Ebene höher)
+    out="$(
+      cd "$simdir" && \
+      sbatch --export=ALL,SIMFILE="$sim",SIMDIR="$simdir" "../$script" 2>&1
+    )"
+    echo "$out"
+
+    jid="$(echo "$out" | awk '/Submitted batch job/ {print $4; exit}')"
+    if [[ -z "$jid" ]]; then
+      echo "Warning: Could not parse JobID for $sim -> skip adjoint for this file."
+      continue
+    fi
+
+    if (( do_adjoint )); then
+      echo "Submitting 'adjoint' inside: $simdir/ (afterok:$jid)"
+      (
+        cd "$simdir" && \
+        sbatch --dependency=afterok:"$jid" --export=ALL,SIMFILE="$sim",SIMDIR="$simdir" ../adjoint.txt
+      )
+    fi
+  done
+
+  echo "Done. Processed ${#sims[@]} *.sim file(s) in $base."
+}
+
+
 fireandforget() {
     local preset_file="$HOME/.fireandforget_default_preset"
     local preset="full"
