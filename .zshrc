@@ -176,18 +176,28 @@ newfireandforget() {
     return 1
   fi
 
-  if [[ ! -d "scripts" ]]; then
-    echo "Error: Missing scripts directory in $base"
+  if [[ ! -d "Scripts" ]]; then
+    echo "Error: Missing Scripts directory in $base"
     return 1
   fi
 
-  if [[ ! -f "scripts/$jobchain" ]]; then
-    echo "Error: Missing scripts/$jobchain in $base"
+  if [[ ! -f "Scripts/$jobchain" ]]; then
+    echo "Error: Missing Scripts/$jobchain in $base"
     return 1
   fi
 
   if [[ ! -f "adjust_SLURMfiles.py" ]]; then
     echo "Error: Missing adjust_SLURMfiles.py in $base"
+    return 1
+  fi
+
+    if [[ ! -f "simConfig.txt" ]]; then
+    echo "Error: Missing simConfig.txt in $base"
+    return 1
+  fi
+
+  if [[ ! -f "simPresets.txt" ]]; then
+    echo "Error: Missing simPresets.txt in $base"
     return 1
   fi
 
@@ -214,15 +224,27 @@ newfireandforget() {
     return 1
   }
 
-  echo "Copying scripts into $run_dir/"
-  cp -a "scripts/." "$run_dir/" || {
-    echo "Error: Failed to copy scripts"
+  echo "Copying Scripts into $run_dir/"
+  cp -a "Scripts/." "$run_dir/" || {
+    echo "Error: Failed to copy Scripts"
     return 1
   }
 
   echo "Copying adjust_SLURMfiles.py into $run_dir/"
   cp -a "adjust_SLURMfiles.py" "$run_dir/" || {
     echo "Error: Failed to copy adjust_SLURMfiles.py"
+    return 1
+  }
+
+    echo "Copying simConfig.txt into $run_dir/"
+  cp -a "simConfig.txt" "$run_dir/" || {
+    echo "Error: Failed to copy simConfig.txt"
+    return 1
+  }
+
+  echo "Copying simPresets.txt into $run_dir/"
+  cp -a "simPresets.txt" "$run_dir/" || {
+    echo "Error: Failed to copy simPresets.txt"
     return 1
   }
 
