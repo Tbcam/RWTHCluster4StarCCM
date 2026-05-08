@@ -181,8 +181,8 @@ newfireandforget() {
     return 1
   fi
 
-  if [[ ! -f "Scripts/$jobchain" ]]; then
-    echo "Error: Missing Scripts/$jobchain in $base"
+  if [[ ! -f "Templates/$jobchain" ]]; then
+    echo "Error: Missing Templates/$jobchain in $base"
     return 1
   fi
 
