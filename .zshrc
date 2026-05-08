@@ -89,124 +89,171 @@ setdefaultpreset() {
 }
 
 newfireandforget() {
-  local base="/rwthfs/rz/cluster/hpcwork/p0020102/$USER"
+  emulate -L zsh
+
+  local username="${USERNAME:-$USER}"
+  local base="/rwthfs/rz/cluster/hpcwork/p0020102/$username"
 
   local print_help
   print_help() {
-    echo -e "Usage: newfireandforget <single|standard|sensitivity> [adjoint]\n\n"\
-"Beispiele:\n"\
-"  newfireandforget single\n"\
-"  newfireandforget standard adjoint\n\n"\
-"Funktion:\n"\
-"  - geht nach: $base\n"\
-"  - fuer jede *.sim:\n"\
-"      1) java -jar createsSimDir.jar SIMNAME.sim\n"\
-"      2) cd SIMNAME/\n"\
-"      3) sbatch ../<mode>.txt\n"\
-"      4) optional: sbatch --dependency=afterok:<jobid> ../adjoint.txt\n\n"\
-"Voraussetzung:\n"\
-"  - createsSimDir.jar sowie single.txt/standard.txt/sensitivity.txt (und optional adjoint.txt) liegen in $base\n"\
-"  - SIMFILE wird per --export gesetzt (in den Skripten als \$SIMFILE nutzbar)"
+    echo -e "Usage: newfireandforget single/standart/sensitivity/unsteady/pretty_pictures/devel\n\n"\
+"single: runs one simulation at the most common operating point\n"\
+"standart: runs 5 sims in varying driving states\n"\
+"sensitivity: runs 30 sims for sensitivity evaluation\n"\
+"unsteady: runs an unsteady DES simulation\n"\
+"pretty_pictures: runs the pretty pictures setup\n"\
+"devel: runs the development setup\n"
   }
 
   local mode="${1:-}"
-  shift 2>/dev/null || true
 
-  # Wenn kein Modus angegeben: Help
   if [[ -z "$mode" ]]; then
     print_help
     return 0
   fi
 
-  # optionales 'adjoint' erkennen (egal an welcher Stelle)
-  local do_adjoint=0
-  for a in "$@"; do
-    if [[ "$a" == "adjoint" ]]; then
-      do_adjoint=1
-      break
+  # Optional: erlaubt auch "pretty pictures" mit Leerzeichen
+  if [[ "$mode" == "pretty" || "$mode" == "prette" ]]; then
+    if [[ "${2:-}" == "pictures" ]]; then
+      mode="pretty_pictures"
     fi
-  done
+  fi
 
-  # Modus -> Script (wenn unbekannt: Help)
-  local script=""
+  local jobchain=""
+
   case "$mode" in
-    single)      script="single.txt" ;;
-    standard)    script="standard.txt" ;;
-    sensitivity) script="sensitivity.txt" ;;
+    single)
+      jobchain="SLURMshell_Jobchain_single.txt"
+      ;;
+    standart)
+      jobchain="SLURMshell_Jobchain_standart.txt"
+      ;;
+    sensitivity)
+      jobchain="SLURMshell_Jobchain_sensitivity.txt"
+      ;;
+    unsteady)
+      jobchain="SLURMshell_Jobchain_unsteady.txt"
+      ;;
+    pretty_pictures|prette_pictures)
+      mode="pretty_pictures"
+      jobchain="SLURMshell_Jobchain_pretty_pictures.txt"
+      ;;
+    devel)
+      jobchain="SLURMshell_Jobchain_devel.txt"
+      ;;
     *)
       print_help
       return 1
       ;;
   esac
 
-  # ins Projektverzeichnis wechseln
-  cd "$base" || { echo "Error: Cannot cd to $base"; return 1; }
+  cd "$base" || {
+    echo "Error: Cannot cd to $base"
+    return 1
+  }
 
-  # sim files sammeln
   setopt LOCAL_OPTIONS NULL_GLOB
+
   local sims=( *.sim )
 
   if (( ${#sims[@]} == 0 )); then
-    echo "No .sim files found in: $base"
+    echo "Error: No .sim file found in $base"
     return 1
   fi
 
-  # Existenz prüfen
-  if [[ ! -f "createsSimDir.jar" ]]; then
-    echo "Error: Missing createsSimDir.jar in $base"
-    return 1
-  fi
-  if [[ ! -f "$script" ]]; then
-    echo "Error: Missing $script in $base"
-    return 1
-  fi
-  if (( do_adjoint )) && [[ ! -f "adjoint.txt" ]]; then
-    echo "Error: Missing adjoint.txt in $base (but 'adjoint' was requested)"
+  if (( ${#sims[@]} > 1 )); then
+    echo "Error: More than one .sim file found in $base:"
+    printf '  %s\n' "${sims[@]}"
+    echo "Please keep only one .sim file in the start directory."
     return 1
   fi
 
-  # submit
-  local sim simdir jid out
-  for sim in "${sims[@]}"; do
-    simdir="${sim%.sim}"
+  local sim="${sims[1]}"
+  local run_dir="${sim%.sim}_${mode}"
 
-    echo "Preparing directory for: $sim"
-    # Ordner erzeugen
-    java -jar createsSimDir.jar "$sim" || {
-      echo "Error: createsSimDir.jar failed for $sim"
-      continue
-    }
+  if [[ ! -d "Templates" ]]; then
+    echo "Error: Missing Templates directory in $base"
+    return 1
+  fi
 
-    if [[ ! -d "$simdir" ]]; then
-      echo "Error: Expected directory '$simdir' was not created for $sim"
-      continue
-    fi
+  if [[ ! -d "scripts" ]]; then
+    echo "Error: Missing scripts directory in $base"
+    return 1
+  fi
 
-    echo "Submitting '$mode' inside: $simdir/"
-    # In den Sim-Ordner wechseln und dort submitten (Skripte liegen eine Ebene höher)
-    out="$(
-      cd "$simdir" && \
-      sbatch --export=ALL,SIMFILE="$sim",SIMDIR="$simdir" "../$script" 2>&1
-    )"
-    echo "$out"
+  if [[ ! -f "scripts/$jobchain" ]]; then
+    echo "Error: Missing scripts/$jobchain in $base"
+    return 1
+  fi
 
-    jid="$(echo "$out" | awk '/Submitted batch job/ {print $4; exit}')"
-    if [[ -z "$jid" ]]; then
-      echo "Warning: Could not parse JobID for $sim -> skip adjoint for this file."
-      continue
-    fi
+  if [[ ! -f "adjust_SLURMfiles.py" ]]; then
+    echo "Error: Missing adjust_SLURMfiles.py in $base"
+    return 1
+  fi
 
-    if (( do_adjoint )); then
-      echo "Submitting 'adjoint' inside: $simdir/ (afterok:$jid)"
-      (
-        cd "$simdir" && \
-        sbatch --dependency=afterok:"$jid" --export=ALL,SIMFILE="$sim",SIMDIR="$simdir" ../adjoint.txt
-      )
-    fi
-  done
+  if [[ -e "$run_dir" ]]; then
+    echo "Error: Target directory already exists: $run_dir"
+    return 1
+  fi
 
-  echo "Done. Processed ${#sims[@]} *.sim file(s) in $base."
+  echo "Creating run directory: $run_dir"
+  mkdir "$run_dir" || {
+    echo "Error: Could not create directory $run_dir"
+    return 1
+  }
+
+  echo "Moving .sim file into $run_dir/"
+  mv "$sim" "$run_dir/" || {
+    echo "Error: Failed to move $sim"
+    return 1
+  }
+
+  echo "Copying Templates into $run_dir/"
+  cp -a "Templates/." "$run_dir/" || {
+    echo "Error: Failed to copy Templates"
+    return 1
+  }
+
+  echo "Copying scripts into $run_dir/"
+  cp -a "scripts/." "$run_dir/" || {
+    echo "Error: Failed to copy scripts"
+    return 1
+  }
+
+  echo "Copying adjust_SLURMfiles.py into $run_dir/"
+  cp -a "adjust_SLURMfiles.py" "$run_dir/" || {
+    echo "Error: Failed to copy adjust_SLURMfiles.py"
+    return 1
+  }
+
+  cd "$run_dir" || {
+    echo "Error: Cannot cd to $run_dir"
+    return 1
+  }
+
+  echo "Running adjust_SLURMfiles.py"
+  python3 adjust_SLURMfiles.py
+
+  local adjust_exit_code=$?
+
+  if (( adjust_exit_code != 0 )); then
+    echo "Error: adjust_SLURMfiles.py failed with exit code $adjust_exit_code"
+    return "$adjust_exit_code"
+  fi
+
+  echo "Running jobchain: sh -e $jobchain"
+  sh -e "$jobchain"
+
+  local exit_code=$?
+
+  if (( exit_code != 0 )); then
+    echo "Error: Jobchain failed with exit code $exit_code"
+    return "$exit_code"
+  fi
+
+  echo "Done. Created and started run in: $base/$run_dir"
 }
+
 
 
 fireandforget() {
