@@ -91,18 +91,24 @@ setdefaultpreset() {
 newfireandforget() {
   emulate -L zsh
 
-  local username="${USERNAME:-$USER}"
-  local base="/rwthfs/rz/cluster/hpcwork/p0020102/$username"
+  local scheduler_dir="/rwthfs/rz/cluster/p0020102/NO_TOUCHY/work_scheduler"
+  local script="$scheduler_dir/fireandforget.py"
 
   local print_help
   print_help() {
-    echo -e "Usage: newfireandforget single/standart/sensitivity/unsteady/pretty_pictures/devel\n\n"\
+    echo -e "Usage: newfireandforget single/standard/sensitivity/DES/pretty_pictures/individual/dev\n\n"\
 "single: runs one simulation at the most common operating point\n"\
-"standart: runs 5 sims in varying driving states\n"\
-"sensitivity: runs 30 sims for sensitivity evaluation\n"\
-"unsteady: runs an unsteady DES simulation\n"\
+"standard: runs simulations for the standard driving states\n"\
+"sensitivity: runs simulations for sensitivity evaluation\n"\
+"DES: runs an unsteady DES simulation\n"\
 "pretty_pictures: runs the pretty pictures setup\n"\
-"devel: runs the development setup\n"
+"individual: runs an individually configured setup\n"\
+"dev: runs the development setup\n\n"\
+"Driving states:\n"\
+"  The standard setup usually contains predefined operating points / driving states.\n"\
+"  Use 'single' for only the most common operating point.\n"\
+"  Use 'standard' for the regular set of driving states.\n"\
+"  Use 'sensitivity' if you want a larger parameter variation.\n"
   }
 
   local mode="${1:-}"
@@ -113,33 +119,12 @@ newfireandforget() {
   fi
 
   # Optional: erlaubt auch "pretty pictures" mit Leerzeichen
-  if [[ "$mode" == "pretty" || "$mode" == "prette" ]]; then
-    if [[ "${2:-}" == "pictures" ]]; then
-      mode="pretty_pictures"
-    fi
+  if [[ "$mode" == "pretty" && "${2:-}" == "pictures" ]]; then
+    mode="pretty_pictures"
   fi
 
-  local jobchain=""
-
   case "$mode" in
-    single)
-      jobchain="SLURMshell_Jobchain_single.txt"
-      ;;
-    standart)
-      jobchain="SLURMshell_Jobchain_standart.txt"
-      ;;
-    sensitivity)
-      jobchain="SLURMshell_Jobchain_sensitivity.txt"
-      ;;
-    unsteady)
-      jobchain="SLURMshell_Jobchain_unsteady.txt"
-      ;;
-    pretty_pictures|prette_pictures)
-      mode="pretty_pictures"
-      jobchain="SLURMshell_Jobchain_pretty_pictures.txt"
-      ;;
-    devel)
-      jobchain="SLURMshell_Jobchain_devel.txt"
+    single|standard|sensitivity|DES|pretty_pictures|individual|dev)
       ;;
     *)
       print_help
@@ -147,133 +132,23 @@ newfireandforget() {
       ;;
   esac
 
-  cd "$base" || {
-    echo "Error: Cannot cd to $base"
+  if [[ ! -d "$scheduler_dir" ]]; then
+    echo "Error: Missing scheduler directory: $scheduler_dir"
+    return 1
+  fi
+
+  if [[ ! -f "$script" ]]; then
+    echo "Error: Missing fireandforget.py in $scheduler_dir"
+    return 1
+  fi
+
+  echo "Starting fireandforget.py with mode: $mode"
+  cd "$scheduler_dir" || {
+    echo "Error: Cannot cd to $scheduler_dir"
     return 1
   }
 
-  setopt LOCAL_OPTIONS NULL_GLOB
-
-  local sims=( *.sim )
-
-  if (( ${#sims[@]} == 0 )); then
-    echo "Error: No .sim file found in $base"
-    return 1
-  fi
-
-  if (( ${#sims[@]} > 1 )); then
-    echo "Error: More than one .sim file found in $base:"
-    printf '  %s\n' "${sims[@]}"
-    echo "Please keep only one .sim file in the start directory."
-    return 1
-  fi
-
-  local sim="${sims[1]}"
-  local run_dir="${sim%.sim}_${mode}"
-
-  if [[ ! -d "Templates" ]]; then
-    echo "Error: Missing Templates directory in $base"
-    return 1
-  fi
-
-  if [[ ! -d "Scripts" ]]; then
-    echo "Error: Missing Scripts directory in $base"
-    return 1
-  fi
-
-  if [[ ! -f "Templates/$jobchain" ]]; then
-    echo "Error: Missing Templates/$jobchain in $base"
-    return 1
-  fi
-
-  if [[ ! -f "adjust_SLURMfiles.py" ]]; then
-    echo "Error: Missing adjust_SLURMfiles.py in $base"
-    return 1
-  fi
-
-    if [[ ! -f "simConfig.txt" ]]; then
-    echo "Error: Missing simConfig.txt in $base"
-    return 1
-  fi
-
-  if [[ ! -f "simPresets.txt" ]]; then
-    echo "Error: Missing simPresets.txt in $base"
-    return 1
-  fi
-
-  if [[ -e "$run_dir" ]]; then
-    echo "Error: Target directory already exists: $run_dir"
-    return 1
-  fi
-
-  echo "Creating run directory: $run_dir"
-  mkdir "$run_dir" || {
-    echo "Error: Could not create directory $run_dir"
-    return 1
-  }
-
-  echo "Moving .sim file into $run_dir/"
-  mv "$sim" "$run_dir/" || {
-    echo "Error: Failed to move $sim"
-    return 1
-  }
-
-  echo "Copying Templates into $run_dir/"
-  cp -a "Templates/." "$run_dir/" || {
-    echo "Error: Failed to copy Templates"
-    return 1
-  }
-
-  echo "Copying Scripts into $run_dir/"
-  cp -a "Scripts/." "$run_dir/" || {
-    echo "Error: Failed to copy Scripts"
-    return 1
-  }
-
-  echo "Copying adjust_SLURMfiles.py into $run_dir/"
-  cp -a "adjust_SLURMfiles.py" "$run_dir/" || {
-    echo "Error: Failed to copy adjust_SLURMfiles.py"
-    return 1
-  }
-
-    echo "Copying simConfig.txt into $run_dir/"
-  cp -a "simConfig.txt" "$run_dir/" || {
-    echo "Error: Failed to copy simConfig.txt"
-    return 1
-  }
-
-  echo "Copying simPresets.txt into $run_dir/"
-  cp -a "simPresets.txt" "$run_dir/" || {
-    echo "Error: Failed to copy simPresets.txt"
-    return 1
-  }
-
-  cd "$run_dir" || {
-    echo "Error: Cannot cd to $run_dir"
-    return 1
-  }
-
-  echo "Running adjust_SLURMfiles.py"
-  python3 adjust_SLURMfiles.py
-
-  local adjust_exit_code=$?
-
-  if (( adjust_exit_code != 0 )); then
-    echo "Error: adjust_SLURMfiles.py failed with exit code $adjust_exit_code"
-    return "$adjust_exit_code"
-  fi
-
-  echo "Running jobchain: sh -e $jobchain"
-  sh -e "$jobchain"
-
-  local exit_code=$?
-
-  if (( exit_code != 0 )); then
-    echo "Error: Jobchain failed with exit code $exit_code"
-    return "$exit_code"
-  fi
-
-  echo "Done. Created and started run in: $base/$run_dir"
+  python "$script" "$mode"
 }
 
 
