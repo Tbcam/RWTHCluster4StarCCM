@@ -91,7 +91,7 @@ setdefaultpreset() {
 newfireandforget() {
   emulate -L zsh
 
-  local scheduler_dir="/rwthfs/rz/cluster/p0020102/NO_TOUCHY/work_scheduler"
+  local scheduler_dir="/rwthfs/rz/cluster/hpcwork/p0020102/NO_TOUCHY/work_scheduler"
   local script="$scheduler_dir/fireandforget.py"
 
   local print_help
